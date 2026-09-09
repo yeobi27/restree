@@ -92,7 +92,7 @@ class _EmotionIcon extends StatelessWidget {
           height: 58,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: emotion.color.withValues(alpha: selected ? 1.0 : 0.45),
+            color: emotion.color.withOpacity(selected ? 1.0 : 0.45),
           ),
           // TODO: 목업의 표정 아이콘 에셋으로 교체
           child: Icon(

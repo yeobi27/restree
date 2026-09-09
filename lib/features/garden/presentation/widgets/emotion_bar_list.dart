@@ -30,7 +30,7 @@ class EmotionBarList extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: count.percentage,
                     minHeight: 9,
-                    backgroundColor: e.color.withValues(alpha: 0.15),
+                    backgroundColor: e.color.withOpacity(0.15),
                     valueColor: AlwaysStoppedAnimation(e.color),
                   ),
                 ),
