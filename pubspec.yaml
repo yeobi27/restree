@@ -5,6 +5,10 @@ version: 0.1.0+1
 
 environment:
   sdk: '>=3.3.0 <4.0.0'
+  # CardThemeData/TabBarThemeData(app_theme.dart)가 3.32에서 필수가 되었으므로
+  # 이보다 낮은 Flutter로 pub get을 시도하면 여기서 바로 에러가 나도록 명시.
+  # (여러 컴퓨터를 오가며 작업할 때 버전 불일치를 조기에 잡기 위함)
+  flutter: '>=3.32.0'
 
 dependencies:
   flutter:
