@@ -47,13 +47,13 @@ class AppTheme {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         ),
-        cardTheme: CardThemeData(
+        cardTheme: CardTheme(
           color: AppColors.surface,
           elevation: 0,
           margin: EdgeInsets.zero,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         ),
-        tabBarTheme: const TabBarThemeData(
+        tabBarTheme: const TabBarTheme(
           labelColor: AppColors.primary,
           unselectedLabelColor: AppColors.textSecondary,
           indicatorColor: AppColors.primary,

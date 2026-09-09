@@ -107,7 +107,7 @@ class RecordDetailScreen extends ConsumerWidget {
                     final selected = e == record.emotion;
                     return CircleAvatar(
                       radius: 26,
-                      backgroundColor: e.color.withValues(alpha: selected ? 1.0 : 0.2),
+                      backgroundColor: e.color.withOpacity(selected ? 1.0 : 0.2),
                       child: Icon(
                         switch (e) {
                           Emotion.good || Emotion.comfortable => Icons.sentiment_satisfied,
