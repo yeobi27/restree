@@ -68,3 +68,9 @@ lib/firebase_options.dart
 
 # --- 기타 ---
 .DS_Store
+
+# --- flutter pub get ---
+
+**/generated_plugin_registrant.cc
+**/generated_plugins.cmake
+**/GeneratedPluginRegistrant.swift
