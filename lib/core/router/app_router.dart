@@ -1,3 +1,8 @@
+// 최종 수정: 2026-10-12
+import 'dart:async';
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/widgets/app_bottom_nav.dart';
 import 'package:restree/features/archive/presentation/screens/archive_screen.dart';
@@ -15,8 +20,36 @@ import 'package:restree/features/record/presentation/screens/scene_input_screen.
 import 'package:restree/features/shop/presentation/screens/shop_screen.dart';
 import 'package:restree/features/tree/presentation/screens/my_tree_screen.dart';
 
+/// 로그인·로그아웃이 일어날 때 라우터가 redirect를 다시 평가하도록 알려주는 장치.
+class _AuthRefresh extends ChangeNotifier {
+  _AuthRefresh() {
+    _sub = FirebaseAuth.instance.authStateChanges().listen((_) => notifyListeners());
+  }
+
+  late final StreamSubscription<User?> _sub;
+
+  @override
+  void dispose() {
+    _sub.cancel();
+    super.dispose();
+  }
+}
+
 final appRouter = GoRouter(
   initialLocation: '/onboarding',
+  refreshListenable: _AuthRefresh(),
+  // 로그인 상태에 따라 갈 수 있는 화면을 정한다.
+  //  - 로그인 상태에서 온보딩/로그인 화면에 오면 → 홈 (앱을 다시 켜도 홈으로 바로 간다)
+  //  - 로그아웃 상태에서 그 밖의 화면에 오면    → 온보딩부터
+  redirect: (context, state) {
+    final loggedIn = FirebaseAuth.instance.currentUser != null;
+    final loc = state.matchedLocation;
+    final onAuthRoute = loc == '/onboarding' || loc == '/login';
+
+    if (loggedIn && onAuthRoute) return '/home';
+    if (!loggedIn && !onAuthRoute) return '/onboarding';
+    return null;
+  },
   routes: [
     GoRoute(path: '/onboarding', builder: (_, __) => const OnboardingScreen()),
     GoRoute(path: '/login', builder: (_, __) => const LoginScreen()),

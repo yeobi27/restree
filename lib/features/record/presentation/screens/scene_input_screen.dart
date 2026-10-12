@@ -7,6 +7,7 @@ import 'package:restree/core/constants/app_limits.dart';
 import 'package:restree/core/utils/kst.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
+import 'package:restree/features/record/presentation/utils/flow_navigation.dart';
 import 'package:restree/features/record/presentation/widgets/photo_picker_strip.dart';
 import 'package:restree/features/record/presentation/widgets/step_indicator.dart';
 
@@ -49,8 +50,14 @@ class _SceneInputScreenState extends ConsumerState<SceneInputScreen> {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () {
+              final editing = ref.read(recordDraftProvider).isEditing;
               ref.read(recordDraftProvider.notifier).reset();
-              context.go('/home');
+              // 수정 중이면 상세보기로, 새로 쓰던 중이면 홈으로 나간다.
+              if (editing) {
+                popEditFlow(GoRouter.of(context), 2);
+              } else {
+                context.go('/home');
+              }
             },
           ),
         ],

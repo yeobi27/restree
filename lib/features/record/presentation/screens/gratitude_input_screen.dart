@@ -7,6 +7,7 @@ import 'package:restree/core/constants/app_limits.dart';
 import 'package:restree/core/utils/kst.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
+import 'package:restree/features/record/presentation/utils/flow_navigation.dart';
 import 'package:restree/features/record/presentation/widgets/step_indicator.dart';
 
 /// 05. "오늘 고마웠던 것은?" + "오늘의 나에게 한마디"
@@ -51,7 +52,6 @@ class _GratitudeInputScreenState extends ConsumerState<GratitudeInputScreen> {
     setState(() => _saving = true);
     _syncDraft();
 
-    final editingDate = ref.read(recordDraftProvider).editingDate!;
     await ref.read(recordDraftProvider.notifier).commit(ref.read(recordRepositoryProvider));
 
     // 수정 반영을 화면에 즉시 보이도록 캐시 무효화
@@ -59,7 +59,8 @@ class _GratitudeInputScreenState extends ConsumerState<GratitudeInputScreen> {
 
     if (!mounted) return;
     ref.read(recordDraftProvider.notifier).reset();
-    context.go('/record/detail/$editingDate');
+    // go()로 이동하면 쌓인 화면이 모두 사라져 뒤로가기가 안 된다. 수정 화면 3장만 pop한다.
+    popEditFlow(GoRouter.of(context), 3);
   }
 
   @override
@@ -75,8 +76,14 @@ class _GratitudeInputScreenState extends ConsumerState<GratitudeInputScreen> {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () {
+              final editing = ref.read(recordDraftProvider).isEditing;
               ref.read(recordDraftProvider.notifier).reset();
-              context.go('/home');
+              // 수정 중이면 상세보기로, 새로 쓰던 중이면 홈으로 나간다.
+              if (editing) {
+                popEditFlow(GoRouter.of(context), 3);
+              } else {
+                context.go('/home');
+              }
             },
           ),
         ],

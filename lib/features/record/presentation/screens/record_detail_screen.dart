@@ -65,7 +65,17 @@ class RecordDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(icon: const Icon(Icons.arrow_back_ios_new), onPressed: () => context.pop()),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new),
+          onPressed: () {
+            // 쌓인 화면이 없으면(앱을 이 화면에서 다시 시작한 경우 등) 홈으로 간다.
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/home');
+            }
+          },
+        ),
         title: Text(DateFormat('yyyy년 M월 d일 (E)', 'ko_KR').format(DateTime.parse(date))),
         actions: [
           recordAsync.maybeWhen(

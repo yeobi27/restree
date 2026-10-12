@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:restree/core/constants/emotion.dart';
 import 'package:restree/core/utils/kst.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
+import 'package:restree/features/record/presentation/utils/flow_navigation.dart';
 import 'package:restree/features/record/presentation/widgets/step_indicator.dart';
 
 /// 03. "오늘의 감정은 어땠나요?"
@@ -31,8 +32,14 @@ class EmotionSelectScreen extends ConsumerWidget {
           IconButton(
             icon: const Icon(Icons.close),
             onPressed: () {
+              final editing = ref.read(recordDraftProvider).isEditing;
               ref.read(recordDraftProvider.notifier).reset();
-              context.go('/home');
+              // 수정 중이면 상세보기로, 새로 쓰던 중이면 홈으로 나간다.
+              if (editing) {
+                popEditFlow(GoRouter.of(context), 1);
+              } else {
+                context.go('/home');
+              }
             },
           ),
         ],

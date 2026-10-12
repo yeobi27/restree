@@ -1,3 +1,4 @@
+// 최종 수정: 2026-10-12
 import 'package:restree/core/constants/emotion.dart';
 import 'package:restree/features/record/domain/entities/daily_record.dart';
 import 'package:restree/features/record/domain/repositories/record_repository.dart';
@@ -100,6 +101,10 @@ class RecordRepositoryMock implements RecordRepository {
       updatedAt: DateTime.now(),
     );
   }
+
+  @override
+  Stream<StatsPeriodic> watchStatsPeriodic(PeriodType type, String periodKey) =>
+      Stream.fromFuture(getStatsPeriodic(type, periodKey));
 
   @override
   Future<StatsPeriodic> getStatsPeriodic(PeriodType type, String periodKey) async {

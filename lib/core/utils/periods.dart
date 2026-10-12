@@ -48,3 +48,20 @@ PeriodRange yearRangeOf(DateTime d) => PeriodRange(
       start: DateTime(d.year, 1, 1),
       end: DateTime(d.year, 12, 31),
     );
+
+/// 화면이 "오늘"로 삼을 날짜 (시각 없이 날짜만). provider key로 써도 안전하다.
+DateTime viewToday() {
+  final t = viewAnchor();
+  return DateTime(t.year, t.month, t.day);
+}
+
+/// 기준 날짜를 이전(-1)/다음(+1) 기간으로 옮긴다. DateTime 생성자가 넘치는 일·월을 알아서 올림/내림한다.
+DateTime shiftWeek(DateTime a, int delta) => DateTime(a.year, a.month, a.day + 7 * delta);
+DateTime shiftMonth(DateTime a, int delta) => DateTime(a.year, a.month + delta, 1);
+DateTime shiftYear(DateTime a, int delta) => DateTime(a.year + delta, 1, 1);
+
+/// 주간 라벨 — 올해가 아니면 연도를 앞에 붙여서 다른 해로 넘어가도 헷갈리지 않게 한다.
+String weekLabel(PeriodRange r) {
+  final yearPart = r.start.year != viewToday().year ? '${r.start.year}년 ' : '';
+  return '$yearPart${r.start.month}월 ${r.start.day}일 - ${r.end.month}월 ${r.end.day}일';
+}

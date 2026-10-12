@@ -12,26 +12,17 @@ Future<void> main() async {
   await initializeDateFormatting('ko_KR');
 
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  await _ensureSignedIn();
+  await _waitForAuthState();
 
   runApp(const ProviderScope(child: RestreeApp()));
 }
 
-/// 개발 단계: 익명 로그인으로 uid를 확보한다.
+/// 저장된 로그인 상태가 복원될 때까지 기다린다.
 ///
-/// 웹은 저장된 로그인 상태를 비동기로 복원하므로 currentUser를 바로 보지 않고
-/// authStateChanges의 첫 이벤트를 기다린다. (안 그러면 새로고침할 때마다 새 익명 계정이
-/// 만들어져서 기록이 "사라진 것처럼" 보인다.)
-///
-/// 여기서 [firebase_auth/operation-not-allowed] 에러가 나면 Firebase 콘솔
-/// Authentication > 로그인 방법에서 '익명'을 사용 설정하지 않은 것이다.
-///
-/// TODO: Google/카카오/Apple 로그인을 붙일 때 익명 계정을 linkWithCredential으로
-/// 승격시키면 익명 상태에서 쓴 기록을 그대로 이어받을 수 있다.
-Future<void> _ensureSignedIn() async {
-  final auth = FirebaseAuth.instance;
-  final user = await auth.authStateChanges().first;
-  if (user == null) {
-    await auth.signInAnonymously();
-  }
+/// 웹은 저장된 로그인 정보를 비동기로 복원해서, 이걸 기다리지 않으면 이미 로그인한
+/// 사용자도 잠깐 "로그아웃 상태"로 보여 로그인 화면으로 보내질 수 있다.
+/// 로그인이 안 돼 있으면 여기서 로그인시키지 않고, 라우터(app_router.dart)가
+/// 온보딩/로그인 화면으로 안내한다.
+Future<void> _waitForAuthState() async {
+  await FirebaseAuth.instance.authStateChanges().first;
 }

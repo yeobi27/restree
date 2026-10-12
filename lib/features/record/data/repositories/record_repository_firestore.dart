@@ -1,10 +1,12 @@
 // 최종 수정: 2026-10-12
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:restree/core/utils/kst.dart';
 import 'package:restree/features/record/domain/entities/daily_record.dart';
 import 'package:restree/features/record/domain/repositories/record_repository.dart';
 import 'package:restree/features/tree/domain/entities/stats_periodic.dart';
 import 'package:restree/features/tree/domain/entities/tree_state.dart';
+
 
 /// RecordRepository의 Firestore 구현체.
 ///
@@ -124,7 +126,17 @@ class FirestoreRecordRepository implements RecordRepository {
   @override
   Future<StatsPeriodic> getStatsPeriodic(PeriodType type, String periodKey) async {
     final snap = await _statsDoc(periodKey).get();
-    final data = snap.data();
+    return _decodeStats(type, periodKey, snap.data());
+  }
+
+  @override
+  Stream<StatsPeriodic> watchStatsPeriodic(PeriodType type, String periodKey) {
+    return _statsDoc(periodKey)
+        .snapshots()
+        .map((snap) => _decodeStats(type, periodKey, snap.data()));
+  }
+
+  StatsPeriodic _decodeStats(PeriodType type, String periodKey, Map<String, dynamic>? data) {
     if (data == null) return _emptyStats(type, periodKey);
     return StatsPeriodic.fromJson(
       _timestampsToIso(data, const ['periodStart', 'periodEnd', 'computedAt']),

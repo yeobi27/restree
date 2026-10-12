@@ -12,6 +12,7 @@ import 'package:restree/features/record/presentation/providers/record_providers.
 import 'package:restree/features/record/presentation/widgets/record_preview_card.dart';
 import 'package:restree/features/tree/domain/entities/stats_periodic.dart';
 import 'package:restree/features/tree/presentation/widgets/month_calendar_sheet.dart';
+import 'package:restree/features/tree/presentation/widgets/period_page.dart';
 
 /// 10. 감정 정원 — 주간 / 월간 / 연간
 ///
@@ -36,8 +37,12 @@ class EmotionGardenScreen extends StatelessWidget {
             tabs: [Tab(text: '주간'), Tab(text: '월간'), Tab(text: '연간')],
           ),
         ),
-        body: const TabBarView(
-          children: [_WeeklyTab(), _MonthlyTab(), _YearlyTab()],
+        body: TabBarView(
+          children: [
+            PeriodPage(screen: 'garden', type: PeriodType.week, builder: (a) => _WeeklyTab(anchor: a)),
+            PeriodPage(screen: 'garden', type: PeriodType.month, builder: (a) => _MonthlyTab(anchor: a)),
+            PeriodPage(screen: 'garden', type: PeriodType.year, builder: (a) => _YearlyTab(anchor: a)),
+          ],
         ),
       ),
     );
@@ -45,11 +50,14 @@ class EmotionGardenScreen extends StatelessWidget {
 }
 
 class _WeeklyTab extends ConsumerWidget {
-  const _WeeklyTab();
+  const _WeeklyTab({required this.anchor});
+
+  /// PeriodPage가 정해 준 "지금 보고 있는 기간"의 기준 날짜
+  final DateTime anchor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final week = weekRangeOf(viewAnchor());
+    final week = weekRangeOf(anchor);
     final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.week, week.key)));
 
     return statsAsync.when(
@@ -60,11 +68,6 @@ class _WeeklyTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Center(
-              child: Text(
-                  '${week.start.month}월 ${week.start.day}일 - ${week.end.month}월 ${week.end.day}일',
-                  style: Theme.of(context).textTheme.bodySmall),
-            ),
             const SizedBox(height: 12),
             Center(child: Text('이번 주의 마음', style: Theme.of(context).textTheme.headlineSmall)),
             const SizedBox(height: 20),
@@ -93,11 +96,13 @@ class _WeeklyTab extends ConsumerWidget {
 }
 
 class _MonthlyTab extends ConsumerWidget {
-  const _MonthlyTab();
+  const _MonthlyTab({required this.anchor});
+
+  final DateTime anchor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final monthRange = monthRangeOf(viewAnchor());
+    final monthRange = monthRangeOf(anchor);
     final month = monthRange.start;
     final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.month, monthRange.key)));
 
@@ -112,15 +117,6 @@ class _MonthlyTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_left, color: AppColors.primary)),
-                Text('${month.year}년 ${month.month}월',
-                    style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-                IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_right, color: AppColors.primary)),
-              ],
-            ),
             const SizedBox(height: 12),
             // 지시사항 ① — 감정 비율에 따른 식물(높이) 그래프
             EmotionPlantChart(distribution: stats.emotionDistribution),
@@ -187,11 +183,13 @@ class _MonthlyTab extends ConsumerWidget {
 }
 
 class _YearlyTab extends ConsumerWidget {
-  const _YearlyTab();
+  const _YearlyTab({required this.anchor});
+
+  final DateTime anchor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final yearRange = yearRangeOf(viewAnchor());
+    final yearRange = yearRangeOf(anchor);
     final year = yearRange.start.year;
     final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.year, yearRange.key)));
 

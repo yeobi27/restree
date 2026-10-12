@@ -1,3 +1,4 @@
+// 최종 수정: 2026-10-12
 import 'package:restree/features/record/domain/entities/daily_record.dart';
 import 'package:restree/features/tree/domain/entities/stats_periodic.dart';
 import 'package:restree/features/tree/domain/entities/tree_state.dart';
@@ -27,4 +28,8 @@ abstract class RecordRepository {
   Stream<TreeState> watchTreeState();
 
   Future<StatsPeriodic> getStatsPeriodic(PeriodType type, String periodKey);
+
+  /// 통계 문서를 실시간으로 구독한다. 서버(Cloud Functions)가 계산을 마치는 순간
+  /// 새로고침 없이 화면이 갱신된다. 문서가 아직 없으면 "빈 통계"를 먼저 내보낸다.
+  Stream<StatsPeriodic> watchStatsPeriodic(PeriodType type, String periodKey);
 }

@@ -9,6 +9,7 @@ import 'package:restree/core/utils/periods.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
 import 'package:restree/features/tree/domain/entities/stats_periodic.dart';
 import 'package:restree/features/tree/presentation/widgets/month_calendar_sheet.dart';
+import 'package:restree/features/tree/presentation/widgets/period_page.dart';
 import 'package:restree/features/tree/presentation/widgets/weekly_calendar_strip.dart';
 
 /// 09. 나의 나무 — 주간 / 월간 / 연간
@@ -33,8 +34,12 @@ class MyTreeScreen extends StatelessWidget {
             tabs: [Tab(text: '주간'), Tab(text: '월간'), Tab(text: '연간')],
           ),
         ),
-        body: const TabBarView(
-          children: [_WeeklyTab(), _MonthlyTab(), _YearlyTab()],
+        body: TabBarView(
+          children: [
+            PeriodPage(screen: 'tree', type: PeriodType.week, builder: (a) => _WeeklyTab(anchor: a)),
+            PeriodPage(screen: 'tree', type: PeriodType.month, builder: (a) => _MonthlyTab(anchor: a)),
+            PeriodPage(screen: 'tree', type: PeriodType.year, builder: (a) => _YearlyTab(anchor: a)),
+          ],
         ),
       ),
     );
@@ -44,12 +49,14 @@ class MyTreeScreen extends StatelessWidget {
 // ─────────────────────────── 주간 ───────────────────────────
 
 class _WeeklyTab extends ConsumerWidget {
-  const _WeeklyTab();
+  const _WeeklyTab({required this.anchor});
+
+  /// PeriodPage가 정해 준 "지금 보고 있는 기간"의 기준 날짜
+  final DateTime anchor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: 좌우 화살표로 이전/다음 주 이동 (지금은 "이번 주"만 본다)
-    final week = weekRangeOf(viewAnchor());
+    final week = weekRangeOf(anchor);
     final weekStart = week.start;
     final weekEnd = week.end;
     final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.week, week.key)));
@@ -66,8 +73,6 @@ class _WeeklyTab extends ConsumerWidget {
           data: (records) => ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              _PeriodHeader(
-                  label: '${weekStart.month}월 ${weekStart.day}일 - ${weekEnd.month}월 ${weekEnd.day}일'),
               const SizedBox(height: 12),
               Center(child: Text('이번 주의 나무', style: Theme.of(context).textTheme.headlineSmall)),
               const SizedBox(height: 16),
@@ -97,11 +102,13 @@ class _WeeklyTab extends ConsumerWidget {
 // ─────────────────────────── 월간 ───────────────────────────
 
 class _MonthlyTab extends ConsumerWidget {
-  const _MonthlyTab();
+  const _MonthlyTab({required this.anchor});
+
+  final DateTime anchor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final monthRange = monthRangeOf(viewAnchor());
+    final monthRange = monthRangeOf(anchor);
     final month = monthRange.start;
     final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.month, monthRange.key)));
 
@@ -115,7 +122,6 @@ class _MonthlyTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            _PeriodHeader(label: '${month.year}년 ${month.month}월', withArrows: true),
             const SizedBox(height: 24),
             const Icon(Icons.park, size: 160, color: AppColors.leafFilled),
             const SizedBox(height: 24),
@@ -142,11 +148,13 @@ class _MonthlyTab extends ConsumerWidget {
 // ─────────────────────────── 연간 ───────────────────────────
 
 class _YearlyTab extends ConsumerWidget {
-  const _YearlyTab();
+  const _YearlyTab({required this.anchor});
+
+  final DateTime anchor;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final yearRange = yearRangeOf(viewAnchor());
+    final yearRange = yearRangeOf(anchor);
     final year = yearRange.start.year;
     final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.year, yearRange.key)));
 
@@ -166,7 +174,6 @@ class _YearlyTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            _PeriodHeader(label: '$year년', withArrows: true),
             const SizedBox(height: 20),
             Center(child: Text('$year년의 나무', style: Theme.of(context).textTheme.headlineSmall)),
             const SizedBox(height: 16),
@@ -261,29 +268,6 @@ class _MonthlyBreakdownCard extends StatelessWidget {
 }
 
 // ─────────────────────────── 공통 소품 ───────────────────────────
-
-class _PeriodHeader extends StatelessWidget {
-  final String label;
-  final bool withArrows;
-
-  const _PeriodHeader({required this.label, this.withArrows = false});
-
-  @override
-  Widget build(BuildContext context) {
-    if (!withArrows) {
-      return Center(child: Text(label, style: Theme.of(context).textTheme.bodyMedium));
-    }
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // TODO: 이전/다음 기간 이동 로직 연결
-        IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_left, color: AppColors.primary)),
-        Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),
-        IconButton(onPressed: () {}, icon: const Icon(Icons.chevron_right, color: AppColors.primary)),
-      ],
-    );
-  }
-}
 
 class _StatCard extends StatelessWidget {
   final String title;
