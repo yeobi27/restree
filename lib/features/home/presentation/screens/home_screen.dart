@@ -1,8 +1,10 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:restree/core/theme/app_colors.dart';
+import 'package:restree/core/utils/kst.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
 import 'package:restree/features/record/presentation/widgets/record_preview_card.dart';
 
@@ -18,10 +20,9 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final now = DateTime.now();
-    final todayKey = DateFormat('yyyy-MM-dd').format(now);
-    final yesterdayKey =
-        DateFormat('yyyy-MM-dd').format(now.subtract(const Duration(days: 1)));
+    final now = kstNow(); // 날짜 기준은 KST로 통일 (기기 시간대와 무관)
+    final todayKey = formatDateKey(now);
+    final yesterdayKey = formatDateKey(now.subtract(const Duration(days: 1)));
 
     final treeState = ref.watch(treeStateProvider);
     final todayRecord = ref.watch(recordByDateProvider(todayKey));

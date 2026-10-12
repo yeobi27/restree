@@ -1,8 +1,10 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:restree/core/constants/emotion.dart';
+import 'package:restree/core/utils/kst.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
 import 'package:restree/features/record/presentation/widgets/step_indicator.dart';
 
@@ -18,7 +20,7 @@ class EmotionSelectScreen extends ConsumerWidget {
     final draft = ref.watch(recordDraftProvider);
     final date = draft.editingDate != null
         ? DateTime.parse(draft.editingDate!)
-        : DateTime.now();
+        : kstNow();
     final dateLabel = DateFormat('M월 d일 (E)', 'ko_KR').format(date);
 
     return Scaffold(

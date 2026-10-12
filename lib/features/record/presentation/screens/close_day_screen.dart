@@ -1,3 +1,4 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -24,7 +25,7 @@ class _CloseDayScreenState extends ConsumerState<CloseDayScreen> {
 
     await ref.read(recordDraftProvider.notifier).commit(ref.read(recordRepositoryProvider));
     // treeState(연속 기록 등)는 서버 트리거가 재계산하므로 캐시만 무효화한다.
-    ref.invalidate(treeStateProvider);
+    invalidateRecordCaches(ref);
 
     if (!mounted) return;
     setState(() {

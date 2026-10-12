@@ -1,8 +1,10 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:restree/core/constants/app_limits.dart';
+import 'package:restree/core/utils/kst.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
 import 'package:restree/features/record/presentation/widgets/photo_picker_strip.dart';
@@ -37,7 +39,7 @@ class _SceneInputScreenState extends ConsumerState<SceneInputScreen> {
   @override
   Widget build(BuildContext context) {
     final draft = ref.watch(recordDraftProvider);
-    final date = draft.editingDate != null ? DateTime.parse(draft.editingDate!) : DateTime.now();
+    final date = draft.editingDate != null ? DateTime.parse(draft.editingDate!) : kstNow();
 
     return Scaffold(
       appBar: AppBar(

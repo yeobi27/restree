@@ -1,3 +1,4 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,8 +43,7 @@ class RecordDetailScreen extends ConsumerWidget {
         if (ok == true) {
           // v1.5 §3 — 하드 삭제가 아니라 deletedAt만 기록하는 소프트 삭제
           await repo.softDeleteRecord(date);
-          ref.invalidate(recordByDateProvider(date));
-          ref.invalidate(treeStateProvider);
+          invalidateRecordCaches(ref);
           if (context.mounted) context.go('/archive');
         }
 
@@ -55,8 +55,7 @@ class RecordDetailScreen extends ConsumerWidget {
 
       case _KebabAction.favorite:
         await repo.toggleFavorite(date, !record.isFavorite);
-        ref.invalidate(recordByDateProvider(date));
-        ref.invalidate(favoriteRecordsProvider);
+        invalidateRecordCaches(ref);
     }
   }
 

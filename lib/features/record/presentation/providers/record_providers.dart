@@ -1,4 +1,10 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:restree/core/constants/app_config.dart';
+import 'package:restree/core/utils/kst.dart';
+import 'package:restree/features/record/data/repositories/record_repository_firestore.dart';
 import 'package:restree/core/constants/emotion.dart';
 import 'package:restree/features/record/data/repositories/record_repository_mock.dart';
 import 'package:restree/features/record/domain/entities/daily_record.dart';
@@ -6,10 +12,24 @@ import 'package:restree/features/record/domain/repositories/record_repository.da
 import 'package:restree/features/tree/domain/entities/stats_periodic.dart';
 import 'package:restree/features/tree/domain/entities/tree_state.dart';
 
-/// TODO: Firebase 연동 시 이 한 줄만 FirestoreRecordRepository(...)로 교체
+/// kUseMockData(app_config.dart)로 Mock / Firestore를 전환한다.
 final recordRepositoryProvider = Provider<RecordRepository>((ref) {
-  return RecordRepositoryMock();
+  if (kUseMockData) return RecordRepositoryMock();
+
+  // main()에서 로그인(익명)을 마친 뒤 앱이 시작되므로 currentUser는 null이 아니다.
+  final uid = FirebaseAuth.instance.currentUser!.uid;
+  return FirestoreRecordRepository(firestore: FirebaseFirestore.instance, uid: uid);
 });
+
+/// 기록이 바뀐 뒤(작성·수정·삭제·즐겨찾기) 화면 캐시를 한 번에 무효화한다.
+/// family provider는 인자 없이 넘기면 모든 인스턴스가 무효화된다.
+void invalidateRecordCaches(WidgetRef ref) {
+  ref.invalidate(recordByDateProvider);
+  ref.invalidate(recordsInRangeProvider);
+  ref.invalidate(favoriteRecordsProvider);
+  ref.invalidate(statsPeriodicProvider);
+  ref.invalidate(treeStateProvider);
+}
 
 final treeStateProvider = StreamProvider<TreeState>((ref) {
   return ref.watch(recordRepositoryProvider).watchTreeState();
@@ -109,8 +129,8 @@ class RecordDraftNotifier extends Notifier<RecordDraft> {
   /// 수정 시에도 서버가 본문 변경을 감지해 재추출한다(v1.5 §5.1).
   Future<void> commit(RecordRepository repo) async {
     final draft = state;
-    final now = DateTime.now();
-    final dateKey = draft.editingDate ?? _formatDate(now);
+    final now = DateTime.now(); // createdAt/updatedAt은 실제 시점(instant)
+    final dateKey = draft.editingDate ?? kstTodayKey(); // 날짜 키는 KST 기준
 
     final existing = draft.isEditing ? await repo.getRecordByDate(dateKey) : null;
 
@@ -128,9 +148,6 @@ class RecordDraftNotifier extends Notifier<RecordDraft> {
       updatedAt: now,
     ));
   }
-
-  static String _formatDate(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 }
 
 final recordDraftProvider = NotifierProvider<RecordDraftNotifier, RecordDraft>(

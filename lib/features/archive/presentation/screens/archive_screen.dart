@@ -1,7 +1,9 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/constants/emotion.dart';
+import 'package:restree/core/utils/kst.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/core/widgets/empty_state.dart';
 import 'package:restree/features/record/domain/entities/daily_record.dart';
@@ -28,9 +30,12 @@ class _ArchiveScreenState extends ConsumerState<ArchiveScreen> {
   @override
   Widget build(BuildContext context) {
     // TODO: 기간별 필터 UI(월/연 선택) 연결 — 현재는 최근 1년 고정
-    final now = DateTime.now();
-    final recordsAsync =
-        ref.watch(recordsInRangeProvider((DateTime(now.year - 1, now.month), now)));
+    // 주의: provider key(DateTime)에 시·분·초가 섞이면 build마다 key가 달라져
+    // 무한 재조회가 일어난다. 반드시 날짜(연·월·일)만 쓴다.
+    final now = kstNow();
+    final today = DateTime(now.year, now.month, now.day);
+    final recordsAsync = ref.watch(
+        recordsInRangeProvider((DateTime(now.year - 1, now.month, 1), today)));
 
     return Scaffold(
       appBar: AppBar(

@@ -1,8 +1,10 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:restree/core/constants/app_limits.dart';
+import 'package:restree/core/utils/kst.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
 import 'package:restree/features/record/presentation/widgets/step_indicator.dart';
@@ -53,8 +55,7 @@ class _GratitudeInputScreenState extends ConsumerState<GratitudeInputScreen> {
     await ref.read(recordDraftProvider.notifier).commit(ref.read(recordRepositoryProvider));
 
     // 수정 반영을 화면에 즉시 보이도록 캐시 무효화
-    ref.invalidate(recordByDateProvider(editingDate));
-    ref.invalidate(treeStateProvider);
+    invalidateRecordCaches(ref);
 
     if (!mounted) return;
     ref.read(recordDraftProvider.notifier).reset();
@@ -64,7 +65,7 @@ class _GratitudeInputScreenState extends ConsumerState<GratitudeInputScreen> {
   @override
   Widget build(BuildContext context) {
     final draft = ref.watch(recordDraftProvider);
-    final date = draft.editingDate != null ? DateTime.parse(draft.editingDate!) : DateTime.now();
+    final date = draft.editingDate != null ? DateTime.parse(draft.editingDate!) : kstNow();
 
     return Scaffold(
       appBar: AppBar(
