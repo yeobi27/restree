@@ -99,7 +99,7 @@ class HomeScreen extends ConsumerWidget {
                   ),
                   const SizedBox(width: 12),
                   const Expanded(child: Text('연속 기록', style: TextStyle(fontSize: 15))),
-                  Text('${state.currentStreak}',
+                  Text('${state.effectiveStreak(yesterdayKey)}',
                       style: const TextStyle(
                           fontSize: 20, fontWeight: FontWeight.bold, color: AppColors.primary)),
                   const Text('일', style: TextStyle(fontSize: 14)),

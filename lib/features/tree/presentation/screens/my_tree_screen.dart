@@ -1,9 +1,11 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/constants/emotion.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/core/widgets/empty_state.dart';
+import 'package:restree/core/utils/periods.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
 import 'package:restree/features/tree/domain/entities/stats_periodic.dart';
 import 'package:restree/features/tree/presentation/widgets/month_calendar_sheet.dart';
@@ -46,10 +48,11 @@ class _WeeklyTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO: 현재 주 계산 + 좌우 화살표로 주 이동 (지금은 목업 기준 주 고정)
-    final weekStart = DateTime(2026, 8, 24);
-    final weekEnd = DateTime(2026, 8, 30);
-    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.week, '2026-W35')));
+    // TODO: 좌우 화살표로 이전/다음 주 이동 (지금은 "이번 주"만 본다)
+    final week = weekRangeOf(viewAnchor());
+    final weekStart = week.start;
+    final weekEnd = week.end;
+    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.week, week.key)));
     final recordsAsync = ref.watch(recordsInRangeProvider((weekStart, weekEnd)));
 
     return statsAsync.when(
@@ -63,7 +66,8 @@ class _WeeklyTab extends ConsumerWidget {
           data: (records) => ListView(
             padding: const EdgeInsets.all(20),
             children: [
-              const _PeriodHeader(label: '8월 24일 - 8월 30일'),
+              _PeriodHeader(
+                  label: '${weekStart.month}월 ${weekStart.day}일 - ${weekEnd.month}월 ${weekEnd.day}일'),
               const SizedBox(height: 12),
               Center(child: Text('이번 주의 나무', style: Theme.of(context).textTheme.headlineSmall)),
               const SizedBox(height: 16),
@@ -97,8 +101,9 @@ class _MonthlyTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final month = DateTime(2026, 8);
-    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.month, '2026-08')));
+    final monthRange = monthRangeOf(viewAnchor());
+    final month = monthRange.start;
+    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.month, monthRange.key)));
 
     return statsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -141,7 +146,9 @@ class _YearlyTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.year, '2026')));
+    final yearRange = yearRangeOf(viewAnchor());
+    final year = yearRange.start.year;
+    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.year, yearRange.key)));
 
     return statsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -149,15 +156,19 @@ class _YearlyTab extends ConsumerWidget {
       data: (stats) {
         if (stats.isEmpty) return const EmptyState();
         final busiest = stats.busiestMonth;
-        final elapsed = DateTime.now().difference(stats.periodStart).inDays + 1;
+        // "올해의 N%" — 진행 중인 해는 오늘까지, 지난 해는 연말까지의 일수로 나눈다.
+        final t = viewAnchor();
+        final today = DateTime(t.year, t.month, t.day);
+        final effectiveEnd = today.isBefore(stats.periodEnd) ? today : stats.periodEnd;
+        final elapsed = effectiveEnd.difference(stats.periodStart).inDays + 1;
         final percent = ((stats.daysRecorded / elapsed) * 100).clamp(0, 100).round();
 
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            const _PeriodHeader(label: '2026년', withArrows: true),
+            _PeriodHeader(label: '$year년', withArrows: true),
             const SizedBox(height: 20),
-            Center(child: Text('2026년의 나무', style: Theme.of(context).textTheme.headlineSmall)),
+            Center(child: Text('$year년의 나무', style: Theme.of(context).textTheme.headlineSmall)),
             const SizedBox(height: 16),
             // periodTreeLevel(연도 기준 나무 단계)에 대응하는 일러스트
             const Icon(Icons.forest, size: 170, color: AppColors.leafFilled),

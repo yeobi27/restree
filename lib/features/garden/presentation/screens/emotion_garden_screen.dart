@@ -1,9 +1,11 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/constants/emotion.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/core/widgets/empty_state.dart';
+import 'package:restree/core/utils/periods.dart';
 import 'package:restree/features/garden/presentation/widgets/emotion_bar_list.dart';
 import 'package:restree/features/garden/presentation/widgets/emotion_plant_chart.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
@@ -47,7 +49,8 @@ class _WeeklyTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.week, '2026-W35')));
+    final week = weekRangeOf(viewAnchor());
+    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.week, week.key)));
 
     return statsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -58,7 +61,9 @@ class _WeeklyTab extends ConsumerWidget {
           padding: const EdgeInsets.all(20),
           children: [
             Center(
-              child: Text('8월 24일 - 8월 30일', style: Theme.of(context).textTheme.bodySmall),
+              child: Text(
+                  '${week.start.month}월 ${week.start.day}일 - ${week.end.month}월 ${week.end.day}일',
+                  style: Theme.of(context).textTheme.bodySmall),
             ),
             const SizedBox(height: 12),
             Center(child: Text('이번 주의 마음', style: Theme.of(context).textTheme.headlineSmall)),
@@ -92,8 +97,9 @@ class _MonthlyTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final month = DateTime(2026, 8);
-    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.month, '2026-08')));
+    final monthRange = monthRangeOf(viewAnchor());
+    final month = monthRange.start;
+    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.month, monthRange.key)));
 
     return statsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -185,7 +191,9 @@ class _YearlyTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.year, '2026')));
+    final yearRange = yearRangeOf(viewAnchor());
+    final year = yearRange.start.year;
+    final statsAsync = ref.watch(statsPeriodicProvider((PeriodType.year, yearRange.key)));
 
     return statsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -195,7 +203,7 @@ class _YearlyTab extends ConsumerWidget {
         return ListView(
           padding: const EdgeInsets.all(20),
           children: [
-            Center(child: Text('2026년의 감정 정원', style: Theme.of(context).textTheme.headlineSmall)),
+            Center(child: Text('$year년의 감정 정원', style: Theme.of(context).textTheme.headlineSmall)),
             const SizedBox(height: 6),
             Center(
               child: Text('올해 당신의 마음은 어떤 계절을 지나왔나요?',
@@ -209,7 +217,7 @@ class _YearlyTab extends ConsumerWidget {
 
             const SizedBox(height: 24),
             _Card(
-              title: '2026년의 마음 요약',
+              title: '$year년의 마음 요약',
               child: EmotionBarList(distribution: stats.emotionDistribution),
             ),
             if (stats.highlightRecordIds.isNotEmpty) ...[
