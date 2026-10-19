@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:restree/core/theme/app_colors.dart';
+import 'package:restree/core/constants/layout.dart';
 import 'package:restree/core/utils/kst.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
 import 'package:restree/features/record/presentation/widgets/record_preview_card.dart';
@@ -129,7 +130,7 @@ class HomeScreen extends ConsumerWidget {
                 ? const _NoRecordHint()
                 : RecordPreviewCard(record: record),
           ),
-          const SizedBox(height: 100),
+          const SizedBox(height: kFabClearance),
         ],
       ),
     );

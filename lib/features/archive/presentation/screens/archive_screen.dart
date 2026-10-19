@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/constants/emotion.dart';
+import 'package:restree/core/constants/layout.dart';
 import 'package:restree/core/utils/kst.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/core/widgets/empty_state.dart';
@@ -139,7 +140,7 @@ class _GroupedRecordList extends StatelessWidget {
             ),
           ),
         ],
-        const SliverToBoxAdapter(child: SizedBox(height: 100)),
+        const SliverToBoxAdapter(child: SizedBox(height: kFabClearance)),
       ],
     );
   }

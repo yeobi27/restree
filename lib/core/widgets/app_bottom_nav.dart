@@ -1,3 +1,4 @@
+// 최종 수정: 2026-10-12
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/theme/app_colors.dart';
@@ -15,8 +16,10 @@ class AppBottomNavShell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // extendBody를 켜지 않는다: 켜면 탭 화면이 하단 바 뒤까지 깔려서
+      // 스크롤 끝의 내용이 바에 가려진다. 바 위로 튀어나온 ＋ 버튼이 가리는 부분만
+      // 각 목록의 맨 아래 여백(kFabClearance)으로 처리한다.
       body: navigationShell,
-      extendBody: true,
       floatingActionButton: SizedBox(
         width: 64,
         height: 64,
