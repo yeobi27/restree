@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/constants/emotion.dart';
-import 'package:restree/core/constants/layout.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/core/widgets/empty_state.dart';
 import 'package:restree/core/utils/periods.dart';
@@ -72,7 +71,7 @@ class _WeeklyTab extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('오류: $e')),
           data: (records) => ListView(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
+            padding: const EdgeInsets.all(20),
             children: [
               const SizedBox(height: 12),
               Center(child: Text('이번 주의 나무', style: Theme.of(context).textTheme.headlineSmall)),
@@ -121,7 +120,7 @@ class _MonthlyTab extends ConsumerWidget {
         final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
+          padding: const EdgeInsets.all(20),
           children: [
             const SizedBox(height: 24),
             const Icon(Icons.park, size: 160, color: AppColors.leafFilled),
@@ -173,7 +172,7 @@ class _YearlyTab extends ConsumerWidget {
         final percent = ((stats.daysRecorded / elapsed) * 100).clamp(0, 100).round();
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
+          padding: const EdgeInsets.all(20),
           children: [
             const SizedBox(height: 20),
             Center(child: Text('$year년의 나무', style: Theme.of(context).textTheme.headlineSmall)),

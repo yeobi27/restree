@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/constants/emotion.dart';
-import 'package:restree/core/constants/layout.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/core/widgets/empty_state.dart';
 import 'package:restree/core/utils/periods.dart';
@@ -67,7 +66,7 @@ class _WeeklyTab extends ConsumerWidget {
       data: (stats) {
         if (stats.isEmpty) return const EmptyState();
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
+          padding: const EdgeInsets.all(20),
           children: [
             const SizedBox(height: 12),
             Center(child: Text('이번 주의 마음', style: Theme.of(context).textTheme.headlineSmall)),
@@ -116,7 +115,7 @@ class _MonthlyTab extends ConsumerWidget {
         final dominantCount = dominant == null ? null : stats.emotionDistribution[dominant];
 
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
+          padding: const EdgeInsets.all(20),
           children: [
             const SizedBox(height: 12),
             // 지시사항 ① — 감정 비율에 따른 식물(높이) 그래프
@@ -200,7 +199,7 @@ class _YearlyTab extends ConsumerWidget {
       data: (stats) {
         if (stats.isEmpty) return const EmptyState();
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
+          padding: const EdgeInsets.all(20),
           children: [
             Center(child: Text('$year년의 감정 정원', style: Theme.of(context).textTheme.headlineSmall)),
             const SizedBox(height: 6),

@@ -6,7 +6,6 @@ import 'package:restree/features/record/domain/repositories/record_repository.da
 import 'package:restree/features/tree/domain/entities/stats_periodic.dart';
 import 'package:restree/features/tree/domain/entities/tree_state.dart';
 
-
 /// RecordRepository의 Firestore 구현체.
 ///
 /// 경로 구조 (설계서 v1.1~v1.5):

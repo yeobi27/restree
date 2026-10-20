@@ -1,8 +1,9 @@
-// 최종 수정: 2026-10-12
+// 최종 수정: 2026-10-19
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/core/utils/periods.dart';
+import 'package:restree/features/auth/presentation/providers/auth_providers.dart';
 import 'package:restree/features/tree/domain/entities/stats_periodic.dart';
 import 'package:restree/features/tree/presentation/providers/period_anchor_provider.dart';
 
@@ -45,6 +46,11 @@ class PeriodPage extends ConsumerWidget {
     // 오늘이 이 기간 안에 있으면 더 미래로는 갈 수 없다(미래 기간엔 기록이 없다).
     final canGoNext = range.end.isBefore(viewToday());
 
+    // 계정을 만든 날이 이 기간 안에 있으면 더 과거로는 갈 수 없다(그 전에는 기록이 있을 수 없다).
+    // 이전 기간의 마지막 날 = 이 기간 첫날의 하루 전이므로, 첫날이 시작일보다 뒤일 때만 이동할 수 있다.
+    final startDate = ref.watch(accountStartDateProvider);
+    final canGoPrev = startDate == null || range.start.isAfter(startDate);
+
     void move(int delta) {
       ref.read(periodAnchorProvider(navKey).notifier).update((a) => switch (type) {
             PeriodType.week => shiftWeek(a, delta),
@@ -61,8 +67,9 @@ class PeriodPage extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               IconButton(
-                onPressed: () => move(-1),
+                onPressed: canGoPrev ? () => move(-1) : null,
                 color: AppColors.primary,
+                disabledColor: AppColors.divider,
                 icon: const Icon(Icons.chevron_left),
               ),
               Text(label, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w600)),

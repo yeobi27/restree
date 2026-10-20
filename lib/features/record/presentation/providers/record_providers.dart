@@ -4,7 +4,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:restree/core/constants/app_config.dart';
 import 'package:restree/core/utils/kst.dart';
-import 'package:restree/features/auth/presentation/providers/auth_providers.dart';
 import 'package:restree/features/record/data/repositories/record_repository_firestore.dart';
 import 'package:restree/core/constants/emotion.dart';
 import 'package:restree/features/record/data/repositories/record_repository_mock.dart';
@@ -17,15 +16,8 @@ import 'package:restree/features/tree/domain/entities/tree_state.dart';
 final recordRepositoryProvider = Provider<RecordRepository>((ref) {
   if (kUseMockData) return RecordRepositoryMock();
 
-  // 로그인 계정이 바뀌면(로그아웃 후 다른 계정으로 로그인 등) 이 provider와 하위 provider를
-  // 새로 만들어야 이전 사용자의 데이터가 남지 않는다. "바뀌었다는 사실"만 감지한다.
-  // 스트림의 첫 값이 도착하기 전에도 현재 uid를 값으로 쓰는 이유: 안 그러면 앱을 켠 직후
-  // (대기 중 → uid)로 값이 바뀐 것으로 보여서 저장소가 한 번 더 만들어지고 읽기가 중복된다.
-  ref.watch(authUidProvider.select((a) => a.valueOrNull ?? FirebaseAuth.instance.currentUser?.uid));
-
-  // 값은 스트림이 아니라 currentUser에서 바로 읽는다. 스트림 값은 로그인 직후 한 박자 늦을 수 있다.
-  final uid = FirebaseAuth.instance.currentUser?.uid;
-  if (uid == null) throw StateError('로그인이 필요해요.');
+  // main()에서 로그인(익명)을 마친 뒤 앱이 시작되므로 currentUser는 null이 아니다.
+  final uid = FirebaseAuth.instance.currentUser!.uid;
   return FirestoreRecordRepository(firestore: FirebaseFirestore.instance, uid: uid);
 });
 
