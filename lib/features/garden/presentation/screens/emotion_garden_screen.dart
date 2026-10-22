@@ -1,10 +1,12 @@
-// 최종 수정: 2026-10-12
+// 최종 수정: 2026-10-19
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/constants/emotion.dart';
+import 'package:restree/core/constants/layout.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/core/widgets/empty_state.dart';
+import 'package:restree/features/auth/presentation/providers/auth_providers.dart';
 import 'package:restree/core/utils/periods.dart';
 import 'package:restree/features/garden/presentation/widgets/emotion_bar_list.dart';
 import 'package:restree/features/garden/presentation/widgets/emotion_plant_chart.dart';
@@ -66,7 +68,7 @@ class _WeeklyTab extends ConsumerWidget {
       data: (stats) {
         if (stats.isEmpty) return const EmptyState();
         return ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
           children: [
             const SizedBox(height: 12),
             Center(child: Text('이번 주의 마음', style: Theme.of(context).textTheme.headlineSmall)),
@@ -115,7 +117,7 @@ class _MonthlyTab extends ConsumerWidget {
         final dominantCount = dominant == null ? null : stats.emotionDistribution[dominant];
 
         return ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
           children: [
             const SizedBox(height: 12),
             // 지시사항 ① — 감정 비율에 따른 식물(높이) 그래프
@@ -199,7 +201,7 @@ class _YearlyTab extends ConsumerWidget {
       data: (stats) {
         if (stats.isEmpty) return const EmptyState();
         return ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
           children: [
             Center(child: Text('$year년의 감정 정원', style: Theme.of(context).textTheme.headlineSmall)),
             const SizedBox(height: 6),
@@ -208,7 +210,7 @@ class _YearlyTab extends ConsumerWidget {
                   style: Theme.of(context).textTheme.bodySmall),
             ),
             const SizedBox(height: 20),
-            _MonthGrid(months: stats.monthlyBreakdown),
+            _MonthGrid(year: year, months: stats.monthlyBreakdown),
 
             // NOTE: "감정의 계절"(겨울/봄/여름/가을) 섹션은 v1.2 §7에서 구현 제외로 확정.
             // 필요 시 monthlyBreakdown을 3개월 단위로 묶어 스키마 변경 없이 되살릴 수 있다.
@@ -233,13 +235,18 @@ class _YearlyTab extends ConsumerWidget {
 }
 
 /// 연간 탭 12개월 그리드 — 각 달의 대표 감정으로 식물/이모지를 표시
-class _MonthGrid extends StatelessWidget {
+class _MonthGrid extends ConsumerWidget {
+  final int year;
   final List<MonthlySummary> months;
 
-  const _MonthGrid({required this.months});
+  const _MonthGrid({required this.year, required this.months});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final start = ref.watch(accountStartDateProvider);
+    final today = viewToday();
+    final byMonth = {for (final m in months) m.month: m};
+
     return GridView.count(
       crossAxisCount: 3,
       shrinkWrap: true,
@@ -247,11 +254,19 @@ class _MonthGrid extends StatelessWidget {
       mainAxisSpacing: 10,
       crossAxisSpacing: 10,
       childAspectRatio: 1.0,
-      children: months.map((m) {
+      children: List.generate(12, (i) {
+        final month = i + 1;
+        final summary = byMonth[month];
+        final days = summary?.daysRecorded ?? 0;
+        // 계정 시작 전이거나 미래인 달 — 기록할 수 없었으므로 흐리게 비워 둔다.
+        final notYet = recordableDaysInMonth(year, month, startDate: start, today: today) <= 0;
+        final hasRecords = days > 0;
+        final dominant = summary?.dominantEmotion;
+
         return Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: notYet ? AppColors.background : AppColors.surface,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Column(
@@ -260,19 +275,28 @@ class _MonthGrid extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Text('${m.month}월', style: Theme.of(context).textTheme.bodySmall),
-                  if (m.dominantEmotion != null)
-                    CircleAvatar(radius: 8, backgroundColor: m.dominantEmotion!.color),
+                  Text(
+                    '$month월',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: notYet ? AppColors.leafEmpty : null,
+                        ),
+                  ),
+                  if (hasRecords && dominant != null)
+                    CircleAvatar(radius: 8, backgroundColor: dominant.color),
                 ],
               ),
               const Spacer(),
+              // 기록이 있는 달에만 식물을 그린다(0일인 달에 식물이 보이면 통계가 부정확해 보인다).
               // TODO: 달마다 다른 식물 일러스트 에셋으로 교체
-              const Center(
-                  child: Icon(Icons.grass, color: AppColors.primaryLight, size: 34)),
+              if (hasRecords)
+                const Center(child: Icon(Icons.grass, color: AppColors.primaryLight, size: 34))
+              else if (!notYet)
+                Center(child: Text('기록 없음', style: Theme.of(context).textTheme.bodySmall)),
+              const Spacer(),
             ],
           ),
         );
-      }).toList(),
+      }),
     );
   }
 }

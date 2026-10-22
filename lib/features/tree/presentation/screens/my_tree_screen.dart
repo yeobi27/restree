@@ -1,10 +1,12 @@
-// 최종 수정: 2026-10-12
+// 최종 수정: 2026-10-19
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:restree/core/constants/emotion.dart';
+import 'package:restree/core/constants/layout.dart';
 import 'package:restree/core/theme/app_colors.dart';
 import 'package:restree/core/widgets/empty_state.dart';
+import 'package:restree/features/auth/presentation/providers/auth_providers.dart';
 import 'package:restree/core/utils/periods.dart';
 import 'package:restree/features/record/presentation/providers/record_providers.dart';
 import 'package:restree/features/tree/domain/entities/stats_periodic.dart';
@@ -71,7 +73,7 @@ class _WeeklyTab extends ConsumerWidget {
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (e, _) => Center(child: Text('오류: $e')),
           data: (records) => ListView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
             children: [
               const SizedBox(height: 12),
               Center(child: Text('이번 주의 나무', style: Theme.of(context).textTheme.headlineSmall)),
@@ -120,7 +122,7 @@ class _MonthlyTab extends ConsumerWidget {
         final daysInMonth = DateTime(month.year, month.month + 1, 0).day;
 
         return ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
           children: [
             const SizedBox(height: 24),
             const Icon(Icons.park, size: 160, color: AppColors.leafFilled),
@@ -172,7 +174,7 @@ class _YearlyTab extends ConsumerWidget {
         final percent = ((stats.daysRecorded / elapsed) * 100).clamp(0, 100).round();
 
         return ListView(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 20 + kFabClearance),
           children: [
             const SizedBox(height: 20),
             Center(child: Text('$year년의 나무', style: Theme.of(context).textTheme.headlineSmall)),
@@ -193,7 +195,7 @@ class _YearlyTab extends ConsumerWidget {
               ('연속 기록 최장', '${stats.longestStreakInPeriod}일'),
             ]),
             const SizedBox(height: 16),
-            _MonthlyBreakdownCard(months: stats.monthlyBreakdown),
+            _MonthlyBreakdownCard(year: year, months: stats.monthlyBreakdown),
           ],
         );
       },
@@ -202,13 +204,32 @@ class _YearlyTab extends ConsumerWidget {
 }
 
 /// 연간 탭 "월별 기록 현황" — monthlyBreakdown[].density 로 잎 크기를 달리한다.
-class _MonthlyBreakdownCard extends StatelessWidget {
+class _MonthlyBreakdownCard extends ConsumerWidget {
+  final int year;
   final List<MonthlySummary> months;
 
-  const _MonthlyBreakdownCard({required this.months});
+  const _MonthlyBreakdownCard({required this.year, required this.months});
+
+  /// 화면의 잎과 범례가 같은 크기를 쓴다. (이전에는 범례만 작게 그려서
+  /// 실제 "적음" 잎이 범례의 "보통"처럼 보였다)
+  static double _sizeOf(MonthLeaf leaf) => switch (leaf) {
+        MonthLeaf.high => 28,
+        MonthLeaf.medium => 22,
+        MonthLeaf.low || MonthLeaf.none || MonthLeaf.notYet => 16,
+      };
+
+  static Widget _leaf(MonthLeaf leaf) => switch (leaf) {
+        MonthLeaf.notYet => const Icon(Icons.circle_outlined, size: 10, color: AppColors.leafEmpty),
+        MonthLeaf.none => Icon(Icons.eco_outlined, size: _sizeOf(leaf), color: AppColors.divider),
+        _ => Icon(Icons.eco, size: _sizeOf(leaf), color: AppColors.leafFilled),
+      };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final start = ref.watch(accountStartDateProvider);
+    final today = viewToday();
+    final daysByMonth = {for (final m in months) m.month: m.daysRecorded};
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -224,43 +245,52 @@ class _MonthlyBreakdownCard extends StatelessWidget {
           Wrap(
             spacing: 12,
             runSpacing: 12,
-            children: months.map((m) {
-              final size = switch (m.density) {
-                MonthDensity.high => 28.0,
-                MonthDensity.medium => 22.0,
-                MonthDensity.low => 16.0,
-              };
+            children: List.generate(12, (i) {
+              final month = i + 1;
+              final leaf = monthLeafOf(
+                daysByMonth[month] ?? 0,
+                recordableDaysInMonth(year, month, startDate: start, today: today),
+              );
               return SizedBox(
                 width: 56,
                 child: Column(
                   children: [
-                    Icon(Icons.eco, size: size, color: AppColors.leafFilled),
+                    // 잎 크기가 달라도 월 이름 줄이 흔들리지 않게 높이를 고정한다.
+                    SizedBox(height: 30, child: Center(child: _leaf(leaf))),
                     const SizedBox(height: 4),
-                    Text('${m.month}월', style: Theme.of(context).textTheme.bodySmall),
+                    Text(
+                      '$month월',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: leaf == MonthLeaf.notYet ? AppColors.leafEmpty : null,
+                          ),
+                    ),
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: MonthDensity.values
-                .map((d) => Padding(
-                      padding: const EdgeInsets.only(right: 16),
-                      child: Row(children: [
-                        Icon(Icons.eco,
-                            size: switch (d) {
-                              MonthDensity.high => 18.0,
-                              MonthDensity.medium => 14.0,
-                              MonthDensity.low => 11.0,
-                            },
-                            color: AppColors.leafFilled),
-                        const SizedBox(width: 4),
-                        Text(d.label, style: Theme.of(context).textTheme.bodySmall),
-                      ]),
-                    ))
-                .toList(),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              for (final (leaf, label) in const [
+                (MonthLeaf.high, '기록 많음'),
+                (MonthLeaf.medium, '보통'),
+                (MonthLeaf.low, '기록 적음'),
+                (MonthLeaf.none, '기록 없음'),
+              ])
+                Row(mainAxisSize: MainAxisSize.min, children: [
+                  _leaf(leaf),
+                  const SizedBox(width: 4),
+                  Text(label, style: Theme.of(context).textTheme.bodySmall),
+                ]),
+            ],
           ),
+          // const SizedBox(height: 8),
+          // Text('그 달에 기록할 수 있었던 날 중 기록한 날의 비율: 70% 이상 많음, 40% 이상 보통',
+          //     style: Theme.of(context).textTheme.bodySmall),
         ],
       ),
     );
